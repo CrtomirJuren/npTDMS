@@ -1,11 +1,9 @@
 # npTDMS
 scripts for automaticaly reading tdms log files and converting them to excel or png pictures for report generation
 
-![tdms](C:\Users\crtom\Documents\npTDMS.git\pictures\tdms.png)
-
-![DAQ-sim](C:\Users\crtom\Documents\npTDMS.git\pictures\excel-export.png)
-
-![DAQ-sim](C:\Users\crtom\Documents\npTDMS.git\pictures\DAQ-sim.png)
+![tdms-structure](pictures/tdms.png)
+![excel-export](pictures/excel-export.png)
+![png-export](pictures/DAQ-sim.png)
 
 ## Procedure
 
