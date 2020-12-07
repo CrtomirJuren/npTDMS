@@ -69,8 +69,85 @@ class TdmsFileReader:
         # figure reference for saving plot
         self.figure = None
 
-
     def read_tdms_to_df(self):
+
+
+        tdms_file = TdmsFile.read(self.file_path)
+
+        # get groups
+        for group in tdms_file.groups():
+            self.group_names.append(group.name)
+
+        # get channels
+        for channel in group.channels():
+            self.channel_names.append(channel.name)
+
+        # set current group and channel
+        self.selected_group = self.group_names[0]
+        self.selected_channel = self.channel_names[0]
+
+        signal_data_df = tdms_file[self.selected_group].as_dataframe()
+        print(signal_data_df.head(1))
+
+#            # calculate number of chunks in file
+#            pbar_length = 0
+#            for idx, chunk in enumerate(tdms_file.data_chunks()):
+#                    chunks_number = idx
+#
+#            signal_chunk = chunk[self.selected_group][self.selected_channel]
+#            print(signal_chunk[:])
+#            buffer_length = chunks_number*len(signal_chunk[:])
+#
+#            print(buffer_length)
+#            # create progress bar
+#            pbar = tqdm(total = chunks_number, leave=True, desc=self.file_name)
+#
+#            # start loading chunks of signal data to numpy buffer
+#            is_fc_chunk = True
+#            for chunk in tdms_file.data_chunks():
+#
+#                pbar.update()
+#
+#                v_stacked_buffer = []
+#                is_fc_channel = True
+#                for channel in group.channels():
+#
+#                    channel_name = channel.name
+#                    signal_chunk = chunk[self.selected_group][channel_name]
+#
+#                    if is_fc_channel:
+#                        is_fc_channel = False
+#                        v_stacked_buffer = signal_chunk[:]
+#                    else:
+#                        v_stacked_buffer = np.vstack((v_stacked_buffer, signal_chunk))
+#
+#                if is_fc_chunk:
+#                    is_fc_chunk = False
+#                    h_stacked_buffer = v_stacked_buffer[:]
+#                else:
+#                    h_stacked_buffer = np.hstack((h_stacked_buffer, v_stacked_buffer[:]))
+#
+#            # close progress bar
+#            pbar.close()
+#
+#        # signal by rows to signal by columns
+#        signal_data = np.transpose(h_stacked_buffer)
+#
+#        # numpy array to dataframe
+#        signal_data_df = pd.DataFrame(signal_data, columns = self.channel_names)
+
+        # get time arrays
+        date_time_dt64 = channel.time_track(absolute_time = True)#, accuracy='ns'
+        test_time_dt64 = channel.time_track(absolute_time = False)
+
+        # convert time = numpy array to pandas df
+        date_time_df = pd.DataFrame(date_time_dt64, columns = ['date_time'])
+        test_time_df = pd.DataFrame(test_time_dt64, columns = ['test_time'])
+
+        # merge date_time, test_time and data
+        self.dataframe = pd.concat([date_time_df, test_time_df, signal_data_df], axis=1).reindex(date_time_df.index)
+
+    def read_tdms_to_df_chunks(self):
 
         with TdmsFile.open(self.file_path) as tdms_file:
 
@@ -78,65 +155,71 @@ class TdmsFileReader:
             for group in tdms_file.groups():
                 self.group_names.append(group.name)
 
-            # set current group
-            self.selected_group = self.group_names[0]
-
             # get channels
             for channel in group.channels():
                 self.channel_names.append(channel.name)
+
+            # set current group and channel
+            self.selected_group = self.group_names[0]
+            self.selected_channel = self.channel_names[0]
 
             # calculate number of chunks in file
             pbar_length = 0
             for idx, chunk in enumerate(tdms_file.data_chunks()):
                     chunks_number = idx
 
-            # create progress bar
-            pbar = tqdm(total = chunks_number, leave=True, desc=self.file_name)
+            signal_chunk = chunk[self.selected_group][self.selected_channel]
+            print(signal_chunk[:])
+            buffer_length = chunks_number*len(signal_chunk[:])
 
-            # start loading chunks of signal data to numpy buffer
-            is_fc_chunk = True
-            for chunk in tdms_file.data_chunks():
-
-                pbar.update()
-
-                v_stacked_buffer = []
-                is_fc_channel = True
-                for channel in group.channels():
-
-                    channel_name = channel.name
-                    signal_chunk = chunk[self.selected_group][channel_name]
-
-                    if is_fc_channel:
-                        is_fc_channel = False
-                        v_stacked_buffer = signal_chunk[:]
-                    else:
-                        v_stacked_buffer = np.vstack((v_stacked_buffer, signal_chunk))
-
-                if is_fc_chunk:
-                    is_fc_chunk = False
-                    h_stacked_buffer = v_stacked_buffer[:]
-                else:
-                    h_stacked_buffer = np.hstack((h_stacked_buffer, v_stacked_buffer[:]))
-
-            # close progress bar
-            pbar.close()
-
-            # signal by rows to signal by columns
-            signal_data = np.transpose(h_stacked_buffer)
-
-            # numpy array to dataframe
-            signal_data_df = pd.DataFrame(signal_data, columns = self.channel_names)
-
-            # get time arrays
-            date_time_dt64 = channel.time_track(absolute_time = True)#, accuracy='ns'
-            test_time_dt64 = channel.time_track(absolute_time = False)
-
-            # convert time = numpy array to pandas df
-            date_time_df = pd.DataFrame(date_time_dt64, columns = ['date_time'])
-            test_time_df = pd.DataFrame(test_time_dt64, columns = ['test_time'])
-
-            # merge date_time, test_time and data
-            self.dataframe = pd.concat([date_time_df, test_time_df, signal_data_df], axis=1).reindex(date_time_df.index)
+            print(buffer_length)
+#            # create progress bar
+#            pbar = tqdm(total = chunks_number, leave=True, desc=self.file_name)
+#
+#            # start loading chunks of signal data to numpy buffer
+#            is_fc_chunk = True
+#            for chunk in tdms_file.data_chunks():
+#
+#                pbar.update()
+#
+#                v_stacked_buffer = []
+#                is_fc_channel = True
+#                for channel in group.channels():
+#
+#                    channel_name = channel.name
+#                    signal_chunk = chunk[self.selected_group][channel_name]
+#
+#                    if is_fc_channel:
+#                        is_fc_channel = False
+#                        v_stacked_buffer = signal_chunk[:]
+#                    else:
+#                        v_stacked_buffer = np.vstack((v_stacked_buffer, signal_chunk))
+#
+#                if is_fc_chunk:
+#                    is_fc_chunk = False
+#                    h_stacked_buffer = v_stacked_buffer[:]
+#                else:
+#                    h_stacked_buffer = np.hstack((h_stacked_buffer, v_stacked_buffer[:]))
+#
+#            # close progress bar
+#            pbar.close()
+#
+#            # signal by rows to signal by columns
+#            signal_data = np.transpose(h_stacked_buffer)
+#
+#            # numpy array to dataframe
+#            signal_data_df = pd.DataFrame(signal_data, columns = self.channel_names)
+#
+#            # get time arrays
+#            date_time_dt64 = channel.time_track(absolute_time = True)#, accuracy='ns'
+#            test_time_dt64 = channel.time_track(absolute_time = False)
+#
+#            # convert time = numpy array to pandas df
+#            date_time_df = pd.DataFrame(date_time_dt64, columns = ['date_time'])
+#            test_time_df = pd.DataFrame(test_time_dt64, columns = ['test_time'])
+#
+#            # merge date_time, test_time and data
+#            self.dataframe = pd.concat([date_time_df, test_time_df, signal_data_df], axis=1).reindex(date_time_df.index)
 
 
     def get_df(self):
@@ -174,7 +257,7 @@ class TdmsFileReader:
         self.figure = plt.figure(figsize=(16.80,10.50)) #figsize=(19.20,10.80)
         ax = plt.subplot(111)
         ax1 = self.figure.add_subplot(111)
-        ax2 = ax1.twiny()
+#        ax2 = ax1.twiny() # second x axis not yet working
 
         # create plot name
         plt.title(self.file_name)
@@ -213,7 +296,7 @@ class TdmsFileReader:
         #ax2.set_xticks(new_tick_locations)
         #ax2.set_xticklabels(tick_function(new_tick_locations))
         ax1.set_xlabel(r"test_time")
-        ax2.set_xlabel(r"date_time")
+        #ax2.set_xlabel(r"date_time")
 
         #---------------------------GRID----------------------
         # Major ticks every 20, minor ticks every 5
@@ -257,15 +340,42 @@ def list_files(folder):
             file_list.append(os.path.join(folder,file))
     return file_list
 
-def main():
+def main_multi_file():
 
-    #file_path = r"C:\Users\crtjur\Desktop\Testiranja\ford-otosan\GH-HIDRIA\HIDRIA_DUT_18_20V_1_2ms_Test_04.tdms"
-    file_path = r"\\corp.hidria.com\AET\SI-TO-Users\crtjur\npTDMS.git\data\DAQ-sim.tdms"
+    files = list_files(r"C:\Users\crtjur\Desktop\Testiranja\ford-otosan\GH-HIDRIA")
+
+    pbar = tqdm(total = len(files), leave=True, desc="progress: ")
+
+    for file_path in files:
+
+        pbar.update()
+        # create object
+        my_tdms_obj = TdmsFileReader(file_path)
+
+        # load data to dataframe
+        #my_tdms_obj.read_tdms_to_df_chunks()
+        my_tdms_obj.read_tdms_to_df()
+
+        # get dataframe
+        df = my_tdms_obj.get_df()
+        print(df.head(1))
+
+        my_tdms_obj.plot_manual() #my_tdms_obj.plot_automatic()
+        my_tdms_obj.plot_export_to_png()
+        my_tdms_obj.df_export_to_excel()
+
+    pbar.close()
+
+def main_single_file():
+
+    file_path = r"C:\Users\crtjur\Desktop\Testiranja\ford-otosan\GH-HIDRIA\HIDRIA_DUT_18_20V_1_2ms_Test_04.tdms"
+    #file_path = r"\\corp.hidria.com\AET\SI-TO-Users\crtjur\npTDMS.git\data\DAQ-sim.tdms"
 
     # create object
     my_tdms_obj = TdmsFileReader(file_path)
 
     # load data to dataframe
+    #my_tdms_obj.read_tdms_to_df_chunks()
     my_tdms_obj.read_tdms_to_df()
 
     # get dataframe
@@ -277,6 +387,6 @@ def main():
     my_tdms_obj.df_export_to_excel()
 
 if __name__ == "__main__":
-    main()
+    main_multi_file()
 
 
