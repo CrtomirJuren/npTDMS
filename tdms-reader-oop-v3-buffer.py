@@ -36,18 +36,6 @@ get_ipython().run_line_magic('matplotlib', 'qt5')
 #---------------------------------------------------
 #-------------------configurations------------------
 #---------------------------------------------------
-#DEBUG = True
-DEBUG = False
-
-# data directory
-#r"test_4_DUT_18"
-#r"DAQ-sim"
-DATA_DIR = r"C:\Users\crtjur\Desktop\Testiranja\ford-otosan\GH-HIDRIA"
-FILENAME = r"DAQ-sim"
-FILEPATH = os.path.join(DATA_DIR, FILENAME + ".tdms")
-
-channel_list = []
-group_list = []
 
 class TdmsFileReader:
     def __init__(self, file_path, *args, **kwargs):
@@ -71,7 +59,6 @@ class TdmsFileReader:
 
     def read_tdms_to_df(self):
 
-
         tdms_file = TdmsFile.read(self.file_path)
 
         # get groups
@@ -87,54 +74,6 @@ class TdmsFileReader:
         self.selected_channel = self.channel_names[0]
 
         signal_data_df = tdms_file[self.selected_group].as_dataframe()
-        print(signal_data_df.head(1))
-
-#            # calculate number of chunks in file
-#            pbar_length = 0
-#            for idx, chunk in enumerate(tdms_file.data_chunks()):
-#                    chunks_number = idx
-#
-#            signal_chunk = chunk[self.selected_group][self.selected_channel]
-#            print(signal_chunk[:])
-#            buffer_length = chunks_number*len(signal_chunk[:])
-#
-#            print(buffer_length)
-#            # create progress bar
-#            pbar = tqdm(total = chunks_number, leave=True, desc=self.file_name)
-#
-#            # start loading chunks of signal data to numpy buffer
-#            is_fc_chunk = True
-#            for chunk in tdms_file.data_chunks():
-#
-#                pbar.update()
-#
-#                v_stacked_buffer = []
-#                is_fc_channel = True
-#                for channel in group.channels():
-#
-#                    channel_name = channel.name
-#                    signal_chunk = chunk[self.selected_group][channel_name]
-#
-#                    if is_fc_channel:
-#                        is_fc_channel = False
-#                        v_stacked_buffer = signal_chunk[:]
-#                    else:
-#                        v_stacked_buffer = np.vstack((v_stacked_buffer, signal_chunk))
-#
-#                if is_fc_chunk:
-#                    is_fc_chunk = False
-#                    h_stacked_buffer = v_stacked_buffer[:]
-#                else:
-#                    h_stacked_buffer = np.hstack((h_stacked_buffer, v_stacked_buffer[:]))
-#
-#            # close progress bar
-#            pbar.close()
-#
-#        # signal by rows to signal by columns
-#        signal_data = np.transpose(h_stacked_buffer)
-#
-#        # numpy array to dataframe
-#        signal_data_df = pd.DataFrame(signal_data, columns = self.channel_names)
 
         # get time arrays
         date_time_dt64 = channel.time_track(absolute_time = True)#, accuracy='ns'
@@ -173,53 +112,53 @@ class TdmsFileReader:
             buffer_length = chunks_number*len(signal_chunk[:])
 
             print(buffer_length)
-#            # create progress bar
-#            pbar = tqdm(total = chunks_number, leave=True, desc=self.file_name)
-#
-#            # start loading chunks of signal data to numpy buffer
-#            is_fc_chunk = True
-#            for chunk in tdms_file.data_chunks():
-#
-#                pbar.update()
-#
-#                v_stacked_buffer = []
-#                is_fc_channel = True
-#                for channel in group.channels():
-#
-#                    channel_name = channel.name
-#                    signal_chunk = chunk[self.selected_group][channel_name]
-#
-#                    if is_fc_channel:
-#                        is_fc_channel = False
-#                        v_stacked_buffer = signal_chunk[:]
-#                    else:
-#                        v_stacked_buffer = np.vstack((v_stacked_buffer, signal_chunk))
-#
-#                if is_fc_chunk:
-#                    is_fc_chunk = False
-#                    h_stacked_buffer = v_stacked_buffer[:]
-#                else:
-#                    h_stacked_buffer = np.hstack((h_stacked_buffer, v_stacked_buffer[:]))
-#
-#            # close progress bar
-#            pbar.close()
-#
-#            # signal by rows to signal by columns
-#            signal_data = np.transpose(h_stacked_buffer)
-#
-#            # numpy array to dataframe
-#            signal_data_df = pd.DataFrame(signal_data, columns = self.channel_names)
-#
-#            # get time arrays
-#            date_time_dt64 = channel.time_track(absolute_time = True)#, accuracy='ns'
-#            test_time_dt64 = channel.time_track(absolute_time = False)
-#
-#            # convert time = numpy array to pandas df
-#            date_time_df = pd.DataFrame(date_time_dt64, columns = ['date_time'])
-#            test_time_df = pd.DataFrame(test_time_dt64, columns = ['test_time'])
-#
-#            # merge date_time, test_time and data
-#            self.dataframe = pd.concat([date_time_df, test_time_df, signal_data_df], axis=1).reindex(date_time_df.index)
+            # create progress bar
+            pbar = tqdm(total = chunks_number, leave=True, desc=self.file_name)
+
+            # start loading chunks of signal data to numpy buffer
+            is_fc_chunk = True
+            for chunk in tdms_file.data_chunks():
+
+                pbar.update()
+
+                v_stacked_buffer = []
+                is_fc_channel = True
+                for channel in group.channels():
+
+                    channel_name = channel.name
+                    signal_chunk = chunk[self.selected_group][channel_name]
+
+                    if is_fc_channel:
+                        is_fc_channel = False
+                        v_stacked_buffer = signal_chunk[:]
+                    else:
+                        v_stacked_buffer = np.vstack((v_stacked_buffer, signal_chunk))
+
+                if is_fc_chunk:
+                    is_fc_chunk = False
+                    h_stacked_buffer = v_stacked_buffer[:]
+                else:
+                    h_stacked_buffer = np.hstack((h_stacked_buffer, v_stacked_buffer[:]))
+
+            # close progress bar
+            pbar.close()
+
+            # signal by rows to signal by columns
+            signal_data = np.transpose(h_stacked_buffer)
+
+            # numpy array to dataframe
+            signal_data_df = pd.DataFrame(signal_data, columns = self.channel_names)
+
+            # get time arrays
+            date_time_dt64 = channel.time_track(absolute_time = True)#, accuracy='ns'
+            test_time_dt64 = channel.time_track(absolute_time = False)
+
+            # convert time = numpy array to pandas df
+            date_time_df = pd.DataFrame(date_time_dt64, columns = ['date_time'])
+            test_time_df = pd.DataFrame(test_time_dt64, columns = ['test_time'])
+
+            # merge date_time, test_time and data
+            self.dataframe = pd.concat([date_time_df, test_time_df, signal_data_df], axis=1).reindex(date_time_df.index)
 
 
     def get_df(self):
@@ -300,8 +239,10 @@ class TdmsFileReader:
 
         #---------------------------GRID----------------------
         # Major ticks every 20, minor ticks every 5
-        major_ticks_x = np.arange(0, test_time_max, test_time_max/10)
-        minor_ticks_x = np.arange(0, test_time_max, test_time_max/20)
+        #major_ticks_x = np.arange(0, test_time_max, test_time_max/10)
+        #minor_ticks_x = np.arange(0, test_time_max, test_time_max/20)
+        major_ticks_x = np.arange(0, 1025, 205) # cycle length 205s
+        minor_ticks_x = np.arange(0, 1025, 51.25)
 
         ax.set_xticks(major_ticks_x)
         ax.set_xticks(minor_ticks_x, minor=True)
@@ -342,7 +283,7 @@ def list_files(folder):
 
 def main_multi_file():
 
-    files = list_files(r"C:\Users\crtjur\Desktop\Testiranja\ford-otosan\GH-HIDRIA")
+    files = list_files(r"\\his02-pr01\Proizvodnja\Razvoj\Laboratorij\PROJEKTI\ford-otosan\GH-HIDRIA")
 
     pbar = tqdm(total = len(files), leave=True, desc="progress: ")
 
@@ -368,25 +309,21 @@ def main_multi_file():
 
 def main_single_file():
 
-    file_path = r"C:\Users\crtjur\Desktop\Testiranja\ford-otosan\GH-HIDRIA\HIDRIA_DUT_18_20V_1_2ms_Test_04.tdms"
+    file_path = r"\\his02-pr01\Proizvodnja\Razvoj\Laboratorij\PROJEKTI\PSG-Change-Managment-LEG3\716700024-Thermal-Shock-Immersion\logging-DO5\2020_12_03_10_49_ Immersion-D05.tdms"
     #file_path = r"\\corp.hidria.com\AET\SI-TO-Users\crtjur\npTDMS.git\data\DAQ-sim.tdms"
-
+    #C:\Users\crtjur\Desktop\Testiranja\HIDRIA_DUT_15_20V_0ms_Test_01_new.tdms
+    #\\his02-pr01\Proizvodnja\Razvoj\Laboratorij\PROJEKTI\PSG-Change-Managment-LEG3\716700024-Thermal-Shock-Immersion\logging-DO5
     # create object
-    my_tdms_obj = TdmsFileReader(file_path)
 
-    # load data to dataframe
+    my_tdms_obj = TdmsFileReader(file_path)
     #my_tdms_obj.read_tdms_to_df_chunks()
     my_tdms_obj.read_tdms_to_df()
-
-    # get dataframe
-    df = my_tdms_obj.get_df()
-    print(df.head(1))
-
-    my_tdms_obj.plot_manual() #my_tdms_obj.plot_automatic()
+    #my_tdms_obj.plot_manual()
+    my_tdms_obj.plot_automatic()
     my_tdms_obj.plot_export_to_png()
-    my_tdms_obj.df_export_to_excel()
+    #my_tdms_obj.df_export_to_excel()
 
 if __name__ == "__main__":
-    main_multi_file()
-
+    #main_multi_file()
+    main_single_file()
 
